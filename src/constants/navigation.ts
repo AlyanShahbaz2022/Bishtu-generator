@@ -57,12 +57,12 @@ export const productMenu: { heading: string; links: NavLink[] }[] = [
 
 /** Services offered (mirrors the UI brief overview). */
 export const servicesMenu: NavLink[] = [
-  { title: "Generator Sales", href: "/services#sales" },
-  { title: "Generator Rentals", href: "/services#rental" },
-  { title: "Repair & Maintenance", href: "/services#repair" },
-  { title: "Generator Overhauling", href: "/services#overhaul" },
-  { title: "Genuine Spare Parts", href: "/services#parts" },
-  { title: "Power Consultation", href: "/services#consultation" },
+  { title: "Generator Sales", href: "/products" },
+  { title: "Generator Rentals", href: "/rental" },
+  { title: "Repair & Maintenance", href: "/service" },
+  { title: "Generator Overhauling", href: "/service" },
+  { title: "Genuine Spare Parts", href: "/category/genuine-spare-parts" },
+  { title: "Power Consultation", href: "/quote" },
 ];
 
 /** Footer link columns. */

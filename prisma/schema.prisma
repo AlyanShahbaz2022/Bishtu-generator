@@ -543,7 +543,12 @@ model Quote {
 
 model Rental {
   id                   String       @id @default(uuid())
-  customerId           String
+  customerId           String?
+  // Contact details for public (guest) requests; customerId links a user when
+  // the requester is signed in.
+  name                 String
+  email                String
+  phone                String
   productId            String?
   rentalStart          DateTime?
   rentalEnd            DateTime?
@@ -557,7 +562,7 @@ model Rental {
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
-  customer User     @relation(fields: [customerId], references: [id])
+  customer User?     @relation(fields: [customerId], references: [id])
   product  Product? @relation(fields: [productId], references: [id])
 
   @@index([customerId])
@@ -567,7 +572,11 @@ model Rental {
 
 model ServiceRequest {
   id               String          @id @default(uuid())
-  customerId       String
+  customerId       String?
+  // Contact details for public (guest) requests.
+  name             String
+  email            String
+  phone            String
   generatorBrand   String?
   generatorModel   String?
   serialNumber     String?
@@ -581,7 +590,7 @@ model ServiceRequest {
   createdAt        DateTime        @default(now())
   updatedAt        DateTime        @updatedAt
 
-  customer User @relation(fields: [customerId], references: [id])
+  customer User? @relation(fields: [customerId], references: [id])
 
   @@index([customerId])
   @@index([status])

@@ -143,3 +143,39 @@ export async function sendOrderConfirmationEmail(args: {
     ),
   });
 }
+
+/**
+ * Internal notification to the sales inbox when a new lead (quote/rental/
+ * service) is submitted. Sent to the configured company email.
+ */
+export async function sendLeadNotificationEmail(args: {
+  type: "Quote" | "Rental" | "Service";
+  rows: { label: string; value: string }[];
+}): Promise<void> {
+  const { type, rows } = args;
+  const to = siteConfig.contact.email;
+  const text = rows.map((r) => `${r.label}: ${r.value}`).join("\n");
+  await send({
+    to,
+    subject: `New ${type} request — ${siteConfig.name}`,
+    text: `New ${type} request:\n${text}`,
+    html: layout(
+      `New ${type} request`,
+      `<table style="width:100%;border-collapse:collapse;font-size:14px;color:#cfe0d6;">
+        ${rows
+          .map(
+            (r) =>
+              `<tr><td style="padding:6px 0;color:#7c9486;">${r.label}</td><td style="padding:6px 0;color:#fff;font-weight:600;text-align:right;">${escapeHtml(r.value)}</td></tr>`,
+          )
+          .join("")}
+      </table>`,
+    ),
+  });
+}
+
+function escapeHtml(value: string): string {
+  return value
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
