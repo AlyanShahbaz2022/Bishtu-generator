@@ -2,6 +2,7 @@ import { CookieConsent } from "@/components/layout/cookie-consent";
 import { FloatingActions } from "@/components/layout/floating-actions";
 import { Footer } from "@/components/layout/footer";
 import { Navbar } from "@/components/layout/navbar";
+import { CompareBar } from "@/features/products/components/compare-bar";
 
 /**
  * Public marketing/storefront shell: fixed navbar, content, footer, and the
@@ -18,6 +19,7 @@ export default function MarketingLayout({
       <Navbar />
       <main className="flex-1 pt-16">{children}</main>
       <Footer />
+      <CompareBar />
       <FloatingActions />
       <CookieConsent />
     </>
