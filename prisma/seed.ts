@@ -1,6 +1,10 @@
 import "dotenv/config";
 import { PrismaPg } from "@prisma/adapter-pg";
+import { hashPassword } from "better-auth/crypto";
 import { PrismaClient } from "../src/generated/prisma/client";
+
+const ADMIN_EMAIL = "admin@techandtune.pk";
+const ADMIN_PASSWORD = "Admin@12345";
 
 const adapter = new PrismaPg({ connectionString: process.env.DATABASE_URL });
 const prisma = new PrismaClient({ adapter });
@@ -348,6 +352,90 @@ async function main() {
     });
   }
   console.log(`  ✓ ${demoProducts.length} demo products`);
+
+  // ── Admin user (email/password via Better Auth credential account) ──
+  const superAdminRole = await prisma.role.findUnique({
+    where: { name: "Super Admin" },
+  });
+  const admin = await prisma.user.upsert({
+    where: { email: ADMIN_EMAIL },
+    update: { role: "super-admin", roleId: superAdminRole?.id },
+    create: {
+      name: "Site Admin",
+      firstName: "Site",
+      lastName: "Admin",
+      email: ADMIN_EMAIL,
+      emailVerified: true,
+      role: "super-admin",
+      roleId: superAdminRole?.id,
+    },
+  });
+  const hasCredential = await prisma.account.findFirst({
+    where: { userId: admin.id, providerId: "credential" },
+  });
+  if (!hasCredential) {
+    await prisma.account.create({
+      data: {
+        userId: admin.id,
+        accountId: admin.id,
+        providerId: "credential",
+        password: await hashPassword(ADMIN_PASSWORD),
+      },
+    });
+  }
+  console.log(`  ✓ admin user (${ADMIN_EMAIL} / ${ADMIN_PASSWORD})`);
+
+  // ── Starter navigation tree (only if empty) ──
+  if ((await prisma.navItem.count()) === 0) {
+    const navTree: {
+      label: string;
+      children: { label: string; categorySlug: string }[];
+    }[] = [
+      {
+        label: "Generators",
+        children: [
+          { label: "Diesel Generators", categorySlug: "diesel-generators" },
+          { label: "Petrol Generators", categorySlug: "petrol-generators" },
+          { label: "Silent Generators", categorySlug: "silent-generators" },
+          {
+            label: "Open Type Generators",
+            categorySlug: "open-type-generators",
+          },
+        ],
+      },
+      {
+        label: "Parts & Accessories",
+        children: [
+          {
+            label: "Generator Accessories",
+            categorySlug: "generator-accessories",
+          },
+          { label: "Genuine Spare Parts", categorySlug: "genuine-spare-parts" },
+        ],
+      },
+    ];
+
+    let deptOrder = 0;
+    for (const dept of navTree) {
+      const department = await prisma.navItem.create({
+        data: { label: dept.label, level: 0, sortOrder: deptOrder++ },
+      });
+      let childOrder = 0;
+      for (const child of dept.children) {
+        await prisma.navItem.create({
+          data: {
+            label: child.label,
+            level: 1,
+            parentId: department.id,
+            categoryId: categoryId.get(child.categorySlug),
+            href: `/category/${child.categorySlug}`,
+            sortOrder: childOrder++,
+          },
+        });
+      }
+    }
+    console.log("  ✓ starter navigation tree");
+  }
 
   console.log("Seeding complete.");
 }

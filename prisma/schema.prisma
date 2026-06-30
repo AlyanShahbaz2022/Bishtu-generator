@@ -265,6 +265,8 @@ model Category {
   slug           String    @unique
   description    String?
   image          String?
+  fuelType       FuelType?
+  sortOrder      Int       @default(0)
   parentId       String?
   seoTitle       String?
   seoDescription String?
@@ -276,10 +278,50 @@ model Category {
   parent   Category?  @relation("CategoryChildren", fields: [parentId], references: [id])
   children Category[] @relation("CategoryChildren")
   products Product[]
+  navItems NavItem[]
 
   @@index([slug])
   @@index([parentId])
   @@index([status])
+}
+
+// 3-level storefront navigation tree, managed in /admin/navigation.
+// level 0 = Department, 1 = Category (auto-synced to a Category row), 2 = Sub-category.
+model NavItem {
+  id         String   @id @default(uuid())
+  label      String
+  href       String?
+  level      Int      @default(0)
+  parentId   String?
+  categoryId String?
+  isEnabled  Boolean  @default(true)
+  sortOrder  Int      @default(0)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  parent   NavItem?  @relation("NavChildren", fields: [parentId], references: [id], onDelete: Cascade)
+  children NavItem[] @relation("NavChildren")
+  category Category? @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+
+  @@index([parentId])
+  @@index([level])
+  @@index([isEnabled])
+}
+
+// Homepage hero / carousel slides, managed in /admin/homepage.
+model Banner {
+  id        String   @id @default(uuid())
+  title     String?
+  subtitle  String?  @db.Text
+  image     String
+  ctaLabel  String?
+  ctaHref   String?
+  sortOrder Int      @default(0)
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
 }
 
 model Brand {
@@ -316,6 +358,7 @@ model Product {
   kva              Int?
   fuelType         FuelType?
   generatorType    GeneratorType?
+  datasheetUrl     String?
   engineModel      String?
   alternator       String?
   voltage          String?

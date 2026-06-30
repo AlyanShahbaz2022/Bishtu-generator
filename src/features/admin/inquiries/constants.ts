@@ -1,0 +1,26 @@
+export const QUOTE_STATUSES = [
+  "PENDING",
+  "CONTACTED",
+  "QUOTED",
+  "APPROVED",
+  "REJECTED",
+];
+
+export const RENTAL_STATUSES = [
+  "PENDING",
+  "REVIEWING",
+  "QUOTED",
+  "APPROVED",
+  "ACTIVE",
+  "COMPLETED",
+  "CANCELLED",
+];
+
+export const SERVICE_STATUSES = [
+  "PENDING",
+  "ASSIGNED",
+  "SCHEDULED",
+  "IN_PROGRESS",
+  "COMPLETED",
+  "CANCELLED",
+];

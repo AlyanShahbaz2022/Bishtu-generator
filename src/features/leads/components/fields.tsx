@@ -46,11 +46,13 @@ export function TextAreaField({
   label,
   required,
   rows = 4,
+  defaultValue,
 }: {
   name: string;
   label: string;
   required?: boolean;
   rows?: number;
+  defaultValue?: string | null;
 }) {
   return (
     <div className="space-y-2">
@@ -62,6 +64,7 @@ export function TextAreaField({
         name={name}
         required={required}
         rows={rows}
+        defaultValue={defaultValue ?? ""}
         className={controlClass}
       />
     </div>
@@ -101,15 +104,18 @@ export function SelectField({
 export function CheckboxField({
   name,
   label,
+  defaultChecked,
 }: {
   name: string;
   label: string;
+  defaultChecked?: boolean;
 }) {
   return (
     <label className="flex cursor-pointer items-center gap-2 text-sm">
       <input
         type="checkbox"
         name={name}
+        defaultChecked={defaultChecked}
         className="size-4 rounded accent-primary"
       />
       {label}

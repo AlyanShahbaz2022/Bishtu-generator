@@ -39,8 +39,9 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { productMenu, servicesMenu } from "@/constants/navigation";
+import { servicesMenu } from "@/constants/navigation";
 import { siteConfig } from "@/constants/site";
+import type { StorefrontNavDepartment } from "@/services/navigation";
 import { cn } from "@/lib/utils";
 
 const PRIMARY_LINKS = [
@@ -55,7 +56,7 @@ const PRIMARY_LINKS = [
 const waLink = `https://wa.me/${siteConfig.contact.whatsapp.replace(/\D/g, "")}`;
 const telLink = `tel:${siteConfig.contact.phone.replace(/\s/g, "")}`;
 
-export function Navbar() {
+export function Navbar({ nav }: { nav: StorefrontNavDepartment[] }) {
   const [scrolled, setScrolled] = useState(false);
 
   useEffect(() => {
@@ -84,7 +85,7 @@ export function Navbar() {
           </span>
         </Link>
 
-        <DesktopNav />
+        <DesktopNav nav={nav} />
 
         <div className="flex items-center gap-1">
           <SearchButton />
@@ -115,14 +116,14 @@ export function Navbar() {
           <Button asChild size="sm" className="ml-1 hidden lg:inline-flex">
             <Link href="/quote">Request Quote</Link>
           </Button>
-          <MobileNav />
+          <MobileNav nav={nav} />
         </div>
       </div>
     </header>
   );
 }
 
-function DesktopNav() {
+function DesktopNav({ nav }: { nav: StorefrontNavDepartment[] }) {
   const pathname = usePathname();
 
   return (
@@ -135,41 +136,36 @@ function DesktopNav() {
           About
         </NavLink>
 
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <div className="grid w-[640px] grid-cols-3 gap-3 p-4">
-              {productMenu.map((group) => (
-                <div key={group.heading}>
-                  <p className="mb-2 px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                    {group.heading}
-                  </p>
-                  <ul className="space-y-1">
-                    {group.links.map((link) => (
-                      <li key={link.href}>
-                        <NavigationMenuLink asChild>
-                          <Link
-                            href={link.href}
-                            className="block rounded-md px-2 py-1.5 hover:bg-muted"
-                          >
-                            <span className="text-sm font-medium">
-                              {link.title}
-                            </span>
-                            {link.description && (
-                              <span className="block text-xs text-muted-foreground">
-                                {link.description}
-                              </span>
-                            )}
-                          </Link>
-                        </NavigationMenuLink>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              ))}
-            </div>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
+        {nav.length > 0 && (
+          <NavigationMenuItem>
+            <NavigationMenuTrigger>Products</NavigationMenuTrigger>
+            <NavigationMenuContent>
+              <div className="grid w-[640px] grid-cols-3 gap-3 p-4">
+                {nav.map((dept) => (
+                  <div key={dept.id}>
+                    <p className="mb-2 px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
+                      {dept.label}
+                    </p>
+                    <ul className="space-y-1">
+                      {dept.children.map((cat) => (
+                        <li key={cat.id}>
+                          <NavigationMenuLink asChild>
+                            <Link
+                              href={cat.href ?? "/products"}
+                              className="block rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted"
+                            >
+                              {cat.label}
+                            </Link>
+                          </NavigationMenuLink>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                ))}
+              </div>
+            </NavigationMenuContent>
+          </NavigationMenuItem>
+        )}
 
         <NavigationMenuItem>
           <NavigationMenuTrigger>Services</NavigationMenuTrigger>
@@ -270,7 +266,7 @@ function SearchButton() {
   );
 }
 
-function MobileNav() {
+function MobileNav({ nav }: { nav: StorefrontNavDepartment[] }) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -305,35 +301,23 @@ function MobileNav() {
             </SheetClose>
           ))}
 
-          <p className="mt-4 px-3 text-xs font-semibold text-muted-foreground uppercase">
-            Products
-          </p>
-          {productMenu.flatMap((group) =>
-            group.links.map((link) => (
-              <SheetClose asChild key={link.href}>
-                <Link
-                  href={link.href}
-                  className="flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-muted"
-                >
-                  {link.title}
-                  <ChevronRight className="size-4 text-muted-foreground" />
-                </Link>
-              </SheetClose>
-            )),
-          )}
-
-          <p className="mt-4 px-3 text-xs font-semibold text-muted-foreground uppercase">
-            Services
-          </p>
-          {servicesMenu.map((link) => (
-            <SheetClose asChild key={link.href}>
-              <Link
-                href={link.href}
-                className="rounded-md px-3 py-2 text-sm hover:bg-muted"
-              >
-                {link.title}
-              </Link>
-            </SheetClose>
+          {nav.map((dept) => (
+            <div key={dept.id}>
+              <p className="mt-4 px-3 text-xs font-semibold text-muted-foreground uppercase">
+                {dept.label}
+              </p>
+              {dept.children.map((cat) => (
+                <SheetClose asChild key={cat.id}>
+                  <Link
+                    href={cat.href ?? "/products"}
+                    className="flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-muted"
+                  >
+                    {cat.label}
+                    <ChevronRight className="size-4 text-muted-foreground" />
+                  </Link>
+                </SheetClose>
+              ))}
+            </div>
           ))}
         </nav>
 
