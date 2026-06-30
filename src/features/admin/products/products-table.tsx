@@ -14,6 +14,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { AdminImage } from "@/features/admin/components/admin-image";
 import { ConfirmDelete } from "@/features/admin/components/confirm-delete";
 import { InlineToggle } from "@/features/admin/components/inline-toggle";
 import {
@@ -135,11 +136,9 @@ export function ProductsTable({ rows }: { rows: ProductRow[] }) {
                 </TableCell>
                 <TableCell>
                   <div className="flex items-center gap-3">
-                    {/* eslint-disable-next-line @next/next/no-img-element */}
                     {r.image && (
-                      <img
+                      <AdminImage
                         src={r.image}
-                        alt=""
                         className="size-10 rounded object-cover"
                       />
                     )}

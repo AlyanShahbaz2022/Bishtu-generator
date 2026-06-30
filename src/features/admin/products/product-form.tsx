@@ -8,6 +8,7 @@ import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { AdminImage } from "@/features/admin/components/admin-image";
 import {
   CheckboxField,
   SelectField,
@@ -412,8 +413,7 @@ function ImagesEditor({
               key={`${img}-${i}`}
               className="flex items-center gap-3 rounded-lg border border-border p-2"
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={img} alt="" className="size-12 rounded object-cover" />
+              <AdminImage src={img} className="size-12 rounded object-cover" />
               <span className="flex-1 truncate text-xs text-muted-foreground">
                 {img}
               </span>

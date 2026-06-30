@@ -8,7 +8,10 @@ import { env } from "@/lib/env";
  * avoid exhausting database connections.
  */
 const createPrismaClient = () => {
-  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL });
+  // Cap the pg pool: the Supabase session pooler allows only 15 total
+  // connections, and Next runs multiple build/render workers — each with its
+  // own pool. A small per-pool max keeps the aggregate under that ceiling.
+  const adapter = new PrismaPg({ connectionString: env.DATABASE_URL, max: 2 });
   return new PrismaClient({
     adapter,
     log:

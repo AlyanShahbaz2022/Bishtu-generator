@@ -437,6 +437,197 @@ async function main() {
     console.log("  ✓ starter navigation tree");
   }
 
+  // ── Marketing content (idempotent by count / slug) ──
+  if ((await prisma.banner.count()) === 0) {
+    await prisma.banner.createMany({
+      data: [
+        {
+          title: "Reliable power for mission-critical operations",
+          subtitle:
+            "Diesel & petrol generator sales, rentals, maintenance, and genuine spare parts.",
+          image: "https://picsum.photos/seed/tt-hero-1/1600/900",
+          ctaLabel: "Explore generators",
+          ctaHref: "/products",
+          sortOrder: 0,
+        },
+        {
+          title: "Nationwide rentals & 24/7 service",
+          subtitle: "Certified engineers, genuine parts, fast response.",
+          image: "https://picsum.photos/seed/tt-hero-2/1600/900",
+          ctaLabel: "Request a quote",
+          ctaHref: "/quote",
+          sortOrder: 1,
+        },
+      ],
+    });
+    console.log("  ✓ banners");
+  }
+
+  if ((await prisma.testimonial.count()) === 0) {
+    await prisma.testimonial.createMany({
+      data: [
+        {
+          customerName: "Imran Khalid",
+          company: "Pearl Textiles",
+          designation: "Plant Manager",
+          rating: 5,
+          message:
+            "Tech & Tune sized and installed our 250 KVA standby set flawlessly. Zero downtime since.",
+          published: true,
+          sortOrder: 0,
+        },
+        {
+          customerName: "Dr. Sana Riaz",
+          company: "City Care Hospital",
+          designation: "Facilities Director",
+          rating: 5,
+          message:
+            "Their maintenance team is responsive and professional. Critical power we can rely on.",
+          published: true,
+          sortOrder: 1,
+        },
+        {
+          customerName: "Bilal Ahmed",
+          company: "Skyline Constructions",
+          designation: "Project Lead",
+          rating: 5,
+          message:
+            "Rented multiple units across sites. Delivery, install and support were excellent.",
+          published: true,
+          sortOrder: 2,
+        },
+      ],
+    });
+    console.log("  ✓ testimonials");
+  }
+
+  const PROJECTS = [
+    {
+      title: "500 KVA Standby Power — Pearl Textiles",
+      slug: "pearl-textiles-500-kva",
+      client: "Pearl Textiles",
+      location: "Faisalabad",
+      generatorBrand: "Cummins",
+      generatorCapacity: "500 KVA",
+      description:
+        "Turnkey standby power installation with synchronization panel and remote monitoring.",
+      featured: true,
+    },
+    {
+      title: "Hospital Critical Power — City Care",
+      slug: "city-care-hospital-power",
+      client: "City Care Hospital",
+      location: "Lahore",
+      generatorBrand: "Perkins",
+      generatorCapacity: "250 KVA",
+      description:
+        "Redundant power for operating theatres and ICU with automatic transfer switching.",
+      featured: true,
+    },
+    {
+      title: "Multi-site Rental Fleet — Skyline",
+      slug: "skyline-rental-fleet",
+      client: "Skyline Constructions",
+      location: "Islamabad",
+      generatorBrand: "FG Wilson",
+      generatorCapacity: "60–150 KVA",
+      description: "Managed rental fleet supporting active construction sites.",
+      featured: false,
+    },
+  ];
+  for (const p of PROJECTS) {
+    await prisma.project.upsert({
+      where: { slug: p.slug },
+      update: {},
+      create: {
+        ...p,
+        images: [`https://picsum.photos/seed/${p.slug}/1200/800`],
+      },
+    });
+  }
+  console.log(`  ✓ ${PROJECTS.length} projects`);
+
+  if ((await prisma.fAQ.count()) === 0) {
+    await prisma.fAQ.createMany({
+      data: [
+        {
+          question: "Do you offer installation and commissioning?",
+          answer:
+            "Yes — our engineers handle delivery, installation, and commissioning nationwide.",
+          sortOrder: 0,
+        },
+        {
+          question: "What brands do you carry?",
+          answer:
+            "Perkins, Cummins, FG Wilson, John Deere and other leading manufacturers.",
+          sortOrder: 1,
+        },
+        {
+          question: "Can I rent a generator short-term?",
+          answer:
+            "Absolutely. We offer flexible short and long-term rentals with transport and installation.",
+          sortOrder: 2,
+        },
+        {
+          question: "Do generators come with a warranty?",
+          answer:
+            "All new units include a manufacturer warranty; terms vary by model.",
+          sortOrder: 3,
+        },
+        {
+          question: "Do you provide after-sales service?",
+          answer:
+            "Yes — scheduled maintenance, repairs, overhauling, and genuine spare parts.",
+          sortOrder: 4,
+        },
+        {
+          question: "How do I get a quote?",
+          answer:
+            "Use the Request a Quote form or message us on WhatsApp with your power requirements.",
+          sortOrder: 5,
+        },
+      ],
+    });
+    console.log("  ✓ FAQs");
+  }
+
+  const blogCat = await prisma.blogCategory.upsert({
+    where: { slug: "guides" },
+    update: {},
+    create: { name: "Guides", slug: "guides" },
+  });
+  if ((await prisma.blog.count()) === 0) {
+    await prisma.blog.createMany({
+      data: [
+        {
+          title: "How to size a generator for your business",
+          slug: "how-to-size-a-generator",
+          excerpt:
+            "A practical guide to calculating the right KVA for your load.",
+          content:
+            "Choosing the right generator starts with understanding your total connected load and which circuits are critical. Add up the running watts of essential equipment, account for motor starting surges, and add headroom for growth. Our power consultants can perform a full load assessment and recommend the ideal set.\n\nUndersizing leads to overload and downtime; oversizing wastes fuel and capital. The sweet spot balances peak demand, efficiency, and future expansion.",
+          coverImage: "https://picsum.photos/seed/tt-blog-1/1200/700",
+          categoryId: blogCat.id,
+          published: true,
+          publishedAt: new Date(),
+        },
+        {
+          title: "Diesel vs petrol generators: which is right for you?",
+          slug: "diesel-vs-petrol-generators",
+          excerpt:
+            "Compare fuel efficiency, runtime, noise, and total cost of ownership.",
+          content:
+            "Diesel generators are the workhorses of industrial power — efficient, durable, and ideal for continuous or standby duty at higher capacities. Petrol generators are lighter and lower cost, well suited to portable and lower-power needs.\n\nConsider runtime, fuel availability, maintenance, and noise. For most commercial and industrial sites, diesel offers the best total cost of ownership.",
+          coverImage: "https://picsum.photos/seed/tt-blog-2/1200/700",
+          categoryId: blogCat.id,
+          published: true,
+          publishedAt: new Date(),
+        },
+      ],
+    });
+    console.log("  ✓ blog posts");
+  }
+
   console.log("Seeding complete.");
 }
 

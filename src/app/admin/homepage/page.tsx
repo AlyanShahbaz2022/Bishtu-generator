@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 
+import { AdminImage } from "@/features/admin/components/admin-image";
 import { ConfirmDelete } from "@/features/admin/components/confirm-delete";
 import { DataTable, type Column } from "@/features/admin/components/data-table";
 import { InlineToggle } from "@/features/admin/components/inline-toggle";
@@ -38,10 +39,8 @@ export default async function HomepageAdminPage() {
       header: "Banner",
       cell: (r) => (
         <div className="flex items-center gap-3">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
+          <AdminImage
             src={r.image}
-            alt=""
             className="h-10 w-16 rounded object-cover"
           />
           <span className="font-medium">{r.title ?? "Untitled"}</span>

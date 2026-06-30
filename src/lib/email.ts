@@ -149,7 +149,7 @@ export async function sendOrderConfirmationEmail(args: {
  * service) is submitted. Sent to the configured company email.
  */
 export async function sendLeadNotificationEmail(args: {
-  type: "Quote" | "Rental" | "Service";
+  type: "Quote" | "Rental" | "Service" | "Contact";
   rows: { label: string; value: string }[];
 }): Promise<void> {
   const { type, rows } = args;
