@@ -83,7 +83,17 @@ export function QuickView({ product }: { product: ProductListItem }) {
               )}
             </div>
 
-            <ProductCta productName={product.name} className="mt-6" />
+            <ProductCta
+              product={{
+                productId: product.id,
+                slug: product.slug,
+                name: product.name,
+                image: product.image,
+                price: onSale ? product.salePrice! : product.price,
+                stock: product.stock,
+              }}
+              className="mt-6"
+            />
 
             <Button asChild variant="link" className="mt-3 self-start px-0">
               <Link href={`/product/${product.slug}`}>View full details →</Link>

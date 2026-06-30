@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 
+import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -28,7 +30,12 @@ export default async function DashboardPage() {
             Welcome back, {user.name}.
           </p>
         </div>
-        <SignOutButton />
+        <div className="flex gap-2">
+          <Button asChild variant="outline">
+            <Link href="/dashboard/orders">My orders</Link>
+          </Button>
+          <SignOutButton />
+        </div>
       </div>
 
       <Card>

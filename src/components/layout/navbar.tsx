@@ -13,6 +13,7 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 
 import { ThemeToggle } from "@/components/layout/theme-toggle";
+import { CartIcon } from "@/features/cart/cart-icon";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -110,6 +111,7 @@ export function Navbar() {
             </a>
           </Button>
           <ThemeToggle className="hidden sm:inline-flex" />
+          <CartIcon />
           <Button asChild size="sm" className="ml-1 hidden lg:inline-flex">
             <Link href="/quote">Request Quote</Link>
           </Button>

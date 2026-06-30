@@ -116,7 +116,18 @@ export default async function ProductPage({
             </p>
           )}
 
-          <ProductCta productName={product.name} className="mt-6" size="lg" />
+          <ProductCta
+            product={{
+              productId: product.id,
+              slug: product.slug,
+              name: product.name,
+              image: product.images[0]?.url ?? null,
+              price: onSale ? product.salePrice! : product.price,
+              stock: product.stock,
+            }}
+            className="mt-6"
+            size="lg"
+          />
 
           <div className="mt-6 flex items-center gap-2 text-sm text-muted-foreground">
             <Truck className="size-4" />

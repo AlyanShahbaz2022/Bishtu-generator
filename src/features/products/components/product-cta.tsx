@@ -1,46 +1,33 @@
 "use client";
 
-import { MessageCircle, ShoppingCart } from "lucide-react";
+import { MessageCircle } from "lucide-react";
 import Link from "next/link";
-import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import { AddToCartButton } from "@/features/cart/add-to-cart-button";
+import type { CartItem } from "@/features/cart/use-cart";
 import { siteConfig } from "@/constants/site";
 import { cn } from "@/lib/utils";
 
 const waNumber = siteConfig.contact.whatsapp.replace(/\D/g, "");
 
-/**
- * Conversion CTAs shared by the product card quick-view and detail page.
- * Add to Cart is intentionally a placeholder — cart & checkout ship in Phase 5;
- * Request Quote and WhatsApp are fully functional now.
- */
+/** Conversion CTAs shared by the product card quick-view and detail page. */
 export function ProductCta({
-  productName,
+  product,
   className,
   size = "default",
 }: {
-  productName: string;
+  product: Omit<CartItem, "quantity">;
   className?: string;
   size?: "default" | "lg";
 }) {
   const waHref = `https://wa.me/${waNumber}?text=${encodeURIComponent(
-    `Hi Tech & Tune, I'm interested in the ${productName}. Please share details.`,
+    `Hi Tech & Tune, I'm interested in the ${product.name}. Please share details.`,
   )}`;
 
   return (
     <div className={cn("flex flex-wrap gap-2", className)}>
-      <Button
-        size={size}
-        onClick={() =>
-          toast.info(
-            "Cart & checkout launch in the next phase. For now, request a quote or message us on WhatsApp.",
-          )
-        }
-      >
-        <ShoppingCart />
-        Add to Cart
-      </Button>
+      <AddToCartButton product={product} size={size} />
       <Button asChild size={size} variant="secondary">
         <Link href="/quote">Request Quote</Link>
       </Button>

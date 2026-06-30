@@ -116,3 +116,30 @@ export async function sendPasswordResetEmail(args: {
     ),
   });
 }
+
+export async function sendOrderConfirmationEmail(args: {
+  to: string;
+  name: string;
+  orderNumber: string;
+  total: string;
+  paymentMethod: string;
+  url: string;
+}): Promise<void> {
+  const { to, name, orderNumber, total, paymentMethod, url } = args;
+  await send({
+    to,
+    subject: `Order ${orderNumber} confirmed — ${siteConfig.name}`,
+    text: `Hi ${name}, your order ${orderNumber} (${total}, ${paymentMethod}) is confirmed. Track it: ${url}`,
+    html: layout(
+      "Thank you for your order",
+      `<p style="margin:0 0 16px;font-size:14px;line-height:1.6;color:#cfe0d6;">
+         Hi ${name}, we've received your order and our team will be in touch
+         shortly to confirm payment and delivery.
+       </p>
+       <p style="margin:0 0 4px;font-size:14px;color:#cfe0d6;">Order number: <strong style="color:#fff;">${orderNumber}</strong></p>
+       <p style="margin:0 0 4px;font-size:14px;color:#cfe0d6;">Total: <strong style="color:#fff;">${total}</strong></p>
+       <p style="margin:0 0 16px;font-size:14px;color:#cfe0d6;">Payment method: <strong style="color:#fff;">${paymentMethod}</strong></p>
+       ${button("View your order", url)}`,
+    ),
+  });
+}
