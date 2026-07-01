@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  FolderTree,
   ImageIcon,
   LayoutDashboard,
   ListTree,
@@ -28,11 +29,8 @@ import { cn } from "@/lib/utils";
 
 const NAV: { href: string; label: string; icon: LucideIcon }[] = [
   { href: "/admin", label: "Dashboard", icon: LayoutDashboard },
-  {
-    href: "/admin/navigation",
-    label: "Navigation & Categories",
-    icon: ListTree,
-  },
+  { href: "/admin/navigation", label: "Navigation", icon: ListTree },
+  { href: "/admin/categories", label: "Categories", icon: FolderTree },
   { href: "/admin/products", label: "Products", icon: Package },
   { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
   { href: "/admin/inquiries", label: "Inquiries", icon: MessageSquare },

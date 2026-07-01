@@ -1,43 +1,35 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Pencil, Plus, Sliders, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
-import {
-  SelectField,
-  TextAreaField,
-  TextField,
-} from "@/features/leads/components/fields";
 import { ConfirmDelete } from "@/features/admin/components/confirm-delete";
 import { InlineToggle } from "@/features/admin/components/inline-toggle";
 import {
   addNavItem,
   deleteNavItem,
   moveNavItem,
-  renameNavItem,
   toggleNavItem,
-  updateNavCategory,
-  updateNavHref,
+  updateNavItem,
 } from "@/features/admin/navigation/actions";
-import type { AdminNavItem } from "@/services/navigation";
+import type { AdminNavItem, CategoryOption } from "@/services/navigation";
 
 const LEVEL_LABELS = ["Department", "Category", "Sub-category"];
 const CHILD_LABELS = ["category", "sub-category"];
 
 type Run = (fn: () => Promise<void>, ok?: string) => void;
 
-export function NavManager({ tree }: { tree: AdminNavItem[] }) {
+export function NavManager({
+  tree,
+  categories,
+}: {
+  tree: AdminNavItem[];
+  categories: CategoryOption[];
+}) {
   const router = useRouter();
   const [, start] = useTransition();
 
@@ -62,6 +54,7 @@ export function NavManager({ tree }: { tree: AdminNavItem[] }) {
             index={i}
             count={tree.length}
             run={run}
+            categories={categories}
           />
         ))}
         {tree.length === 0 && (
@@ -70,7 +63,12 @@ export function NavManager({ tree }: { tree: AdminNavItem[] }) {
           </p>
         )}
       </div>
-      <AddForm level={0} run={run} buttonLabel="Add department" />
+      <AddForm
+        level={0}
+        run={run}
+        buttonLabel="Add department"
+        categories={categories}
+      />
     </div>
   );
 }
@@ -80,24 +78,15 @@ function NavRow({
   index,
   count,
   run,
+  categories,
 }: {
   item: AdminNavItem;
   index: number;
   count: number;
   run: Run;
+  categories: CategoryOption[];
 }) {
   const [editing, setEditing] = useState(false);
-  const [label, setLabel] = useState(item.label);
-  const [href, setHref] = useState(item.href ?? "");
-
-  function saveEdits() {
-    run(async () => {
-      if (label.trim() && label !== item.label)
-        await renameNavItem(item.id, label.trim());
-      if (href !== (item.href ?? "")) await updateNavHref(item.id, href);
-    }, "Saved");
-    setEditing(false);
-  }
 
   return (
     <div className="rounded-xl border border-border">
@@ -125,40 +114,37 @@ function NavRow({
 
         <div className="min-w-0 flex-1">
           {editing ? (
-            <div className="flex flex-wrap items-center gap-2">
-              <Input
-                value={label}
-                onChange={(e) => setLabel(e.target.value)}
-                className="h-8 w-44"
-                placeholder="Label"
-              />
-              <Input
-                value={href}
-                onChange={(e) => setHref(e.target.value)}
-                className="h-8 w-56"
-                placeholder="Auto (/category/…) — override optional"
-              />
-              <Button size="sm" onClick={saveEdits}>
-                Save
-              </Button>
-              <Button
-                size="sm"
-                variant="ghost"
-                onClick={() => setEditing(false)}
-              >
-                <X className="size-4" />
-              </Button>
-            </div>
+            <LinkFields
+              categories={categories}
+              initialLabel={item.label}
+              initialCategoryId={item.categoryId}
+              initialHref={item.href}
+              submitLabel="Save"
+              onCancel={() => setEditing(false)}
+              onSubmit={(values) =>
+                run(async () => {
+                  const res = await updateNavItem(item.id, values);
+                  if (!res.ok) throw new Error(res.error);
+                  setEditing(false);
+                }, "Saved")
+              }
+            />
           ) : (
             <div className="flex items-center gap-2">
               <span className="font-medium">{item.label}</span>
               <span className="rounded bg-muted px-1.5 py-0.5 text-[10px] text-muted-foreground uppercase">
                 {LEVEL_LABELS[item.level]}
               </span>
-              {item.href && (
-                <span className="truncate text-xs text-muted-foreground">
-                  {item.href}
+              {item.categoryName ? (
+                <span className="rounded bg-primary/10 px-1.5 py-0.5 text-[10px] text-primary">
+                  Category · {item.categoryName}
                 </span>
+              ) : (
+                item.href && (
+                  <span className="truncate text-xs text-muted-foreground">
+                    {item.href}
+                  </span>
+                )
               )}
             </div>
           )}
@@ -170,7 +156,6 @@ function NavRow({
             label="Visible"
             action={(next) => toggleNavItem(item.id, next)}
           />
-          {item.categoryId && <CategoryDetailsDialog item={item} />}
           {!editing && (
             <Button
               size="icon-sm"
@@ -184,11 +169,7 @@ function NavRow({
           <ConfirmDelete
             action={() => deleteNavItem(item.id)}
             title={`Delete “${item.label}”?`}
-            description={
-              item.category && item.category.productCount > 0
-                ? `This category has ${item.category.productCount} product(s); deletion is blocked until they are moved. Sub-items are also removed.`
-                : "This also deletes all of its sub-items and the linked (empty) category."
-            }
+            description="Removes this menu item and all of its sub-items. The linked category (if any) is kept — manage it under Categories."
             successMessage="Deleted"
           />
         </div>
@@ -204,6 +185,7 @@ function NavRow({
               index={i}
               count={item.children.length}
               run={run}
+              categories={categories}
             />
           ))}
           <AddForm
@@ -211,6 +193,7 @@ function NavRow({
             parentId={item.id}
             run={run}
             buttonLabel={`Add ${CHILD_LABELS[item.level]}`}
+            categories={categories}
           />
         </div>
       )}
@@ -223,22 +206,15 @@ function AddForm({
   parentId,
   run,
   buttonLabel,
+  categories,
 }: {
   level: number;
   parentId?: string;
   run: Run;
   buttonLabel: string;
+  categories: CategoryOption[];
 }) {
   const [open, setOpen] = useState(false);
-  const [label, setLabel] = useState("");
-
-  function submit() {
-    const value = label.trim();
-    if (!value) return;
-    run(() => addNavItem({ label: value, level, parentId }), "Added");
-    setLabel("");
-    setOpen(false);
-  }
 
   if (!open) {
     return (
@@ -255,107 +231,149 @@ function AddForm({
   }
 
   return (
-    <div className="flex items-center gap-2 pt-1">
-      <Input
-        autoFocus
-        value={label}
-        onChange={(e) => setLabel(e.target.value)}
-        onKeyDown={(e) => e.key === "Enter" && submit()}
-        placeholder={buttonLabel}
-        className="h-8 w-52"
+    <div className="pt-1">
+      <LinkFields
+        categories={categories}
+        submitLabel="Add"
+        onCancel={() => setOpen(false)}
+        onSubmit={(values) =>
+          run(async () => {
+            const res = await addNavItem({ ...values, level, parentId });
+            if (!res.ok) throw new Error(res.error);
+            setOpen(false);
+          }, "Added")
+        }
       />
-      <Button size="sm" onClick={submit}>
-        Add
-      </Button>
-      <Button size="sm" variant="ghost" onClick={() => setOpen(false)}>
-        <X className="size-4" />
-      </Button>
     </div>
   );
 }
 
 /**
- * Edit the storefront Category metadata (fuel type, image, description) linked
- * to a level-1 nav item — replaces the standalone Categories admin page.
+ * Shared editor for a nav item: choose "Category" (pick an existing category →
+ * auto-routed) or "Custom link" (free label + href). Used by both add and edit.
  */
-function CategoryDetailsDialog({ item }: { item: AdminNavItem }) {
-  const router = useRouter();
-  const [open, setOpen] = useState(false);
+function LinkFields({
+  categories,
+  initialLabel = "",
+  initialCategoryId = null,
+  initialHref = null,
+  submitLabel,
+  onSubmit,
+  onCancel,
+}: {
+  categories: CategoryOption[];
+  initialLabel?: string;
+  initialCategoryId?: string | null;
+  initialHref?: string | null;
+  submitLabel: string;
+  onSubmit: (values: {
+    label: string;
+    categoryId?: string;
+    href?: string;
+  }) => void;
+  onCancel: () => void;
+}) {
+  const [mode, setMode] = useState<"category" | "custom">(
+    initialCategoryId ? "category" : "custom",
+  );
+  const [label, setLabel] = useState(initialLabel);
+  const [categoryId, setCategoryId] = useState(initialCategoryId ?? "");
+  const [href, setHref] = useState(initialHref ?? "");
   const [pending, start] = useTransition();
-  const cat = item.category;
 
-  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const f = new FormData(event.currentTarget);
-    const input = {
-      fuelType: (f.get("fuelType") as "DIESEL" | "PETROL" | "GAS") || undefined,
-      image: String(f.get("image") ?? ""),
-      description: String(f.get("description") ?? ""),
-    };
-    start(async () => {
-      const res = await updateNavCategory(item.id, input);
-      if (!res.ok) {
-        toast.error(res.error);
+  function submit() {
+    if (mode === "category") {
+      if (!categoryId) {
+        toast.error("Pick a category");
         return;
       }
-      toast.success("Category details saved");
-      setOpen(false);
-      router.refresh();
-    });
+      start(() => onSubmit({ label: label.trim(), categoryId }));
+    } else {
+      if (!label.trim()) {
+        toast.error("Enter a label");
+        return;
+      }
+      start(() => onSubmit({ label: label.trim(), href: href.trim() }));
+    }
   }
 
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger asChild>
-        <Button size="icon-sm" variant="ghost" aria-label="Category details">
-          <Sliders className="size-4" />
+    <div className="flex flex-col gap-2 rounded-lg bg-muted/40 p-2">
+      {/* Mode toggle */}
+      <div className="flex gap-1">
+        <Button
+          type="button"
+          size="sm"
+          variant={mode === "category" ? "default" : "outline"}
+          onClick={() => setMode("category")}
+          className="h-7"
+        >
+          Category
         </Button>
-      </DialogTrigger>
-      <DialogContent className="sm:max-w-lg">
-        <DialogHeader>
-          <DialogTitle>Category details — {item.label}</DialogTitle>
-        </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <p className="text-sm text-muted-foreground">
-            {cat ? `${cat.productCount} product(s)` : "Linked category"}. The
-            name is edited via the nav label above.
-          </p>
-          <SelectField
-            name="fuelType"
-            label="Fuel type"
-            defaultValue={cat?.fuelType ?? ""}
-            options={[
-              { value: "", label: "None" },
-              { value: "DIESEL", label: "Diesel" },
-              { value: "PETROL", label: "Petrol" },
-              { value: "GAS", label: "Gas" },
-            ]}
-          />
-          <TextField
-            name="image"
-            label="Image URL"
-            defaultValue={cat?.image ?? ""}
-          />
-          <TextAreaField
-            name="description"
-            label="Description"
-            rows={3}
-            defaultValue={cat?.description ?? ""}
-          />
-          <div className="flex justify-end gap-2">
-            <Button
-              type="button"
-              variant="outline"
-              onClick={() => setOpen(false)}
+        <Button
+          type="button"
+          size="sm"
+          variant={mode === "custom" ? "default" : "outline"}
+          onClick={() => setMode("custom")}
+          className="h-7"
+        >
+          Custom link
+        </Button>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-2">
+        {mode === "category" ? (
+          <>
+            <select
+              value={categoryId}
+              onChange={(e) => setCategoryId(e.target.value)}
+              className="h-8 rounded-md border border-input bg-background px-2 text-sm"
             >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={pending}>
-              {pending ? "Saving…" : "Save"}
-            </Button>
-          </div>
-        </form>
-      </DialogContent>
-    </Dialog>
+              <option value="">Select a category…</option>
+              {categories.map((c) => (
+                <option key={c.id} value={c.id}>
+                  {c.name}
+                </option>
+              ))}
+            </select>
+            <Input
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="h-8 w-44"
+              placeholder="Menu label (optional)"
+            />
+          </>
+        ) : (
+          <>
+            <Input
+              autoFocus
+              value={label}
+              onChange={(e) => setLabel(e.target.value)}
+              className="h-8 w-44"
+              placeholder="Label (e.g. Deals)"
+            />
+            <Input
+              value={href}
+              onChange={(e) => setHref(e.target.value)}
+              className="h-8 w-56"
+              placeholder="/path or https://… (optional)"
+            />
+          </>
+        )}
+
+        <Button size="sm" onClick={submit} disabled={pending}>
+          {pending ? "Saving…" : submitLabel}
+        </Button>
+        <Button size="sm" variant="ghost" onClick={onCancel}>
+          <X className="size-4" />
+        </Button>
+      </div>
+
+      {mode === "category" && categories.length === 0 && (
+        <p className="text-xs text-muted-foreground">
+          No categories yet — create one under Categories first.
+        </p>
+      )}
+    </div>
   );
 }
