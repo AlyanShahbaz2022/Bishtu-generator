@@ -30,16 +30,26 @@ import { getFeaturedProducts } from "@/services/products";
 // prerender hitting the connection-limited DB pooler). Phase 9 can layer ISR.
 export const dynamic = "force-dynamic";
 
+/** Resolve a data fetch to a fallback if the DB is briefly unreachable, so a
+ *  transient pooler blip degrades the homepage gracefully instead of crashing. */
+async function safe<T>(promise: Promise<T>, fallback: T): Promise<T> {
+  try {
+    return await promise;
+  } catch {
+    return fallback;
+  }
+}
+
 export default async function HomePage() {
   const [banners, categories, products, brands, projects, testimonials, faqs] =
     await Promise.all([
-      getActiveBanners(),
-      getFeaturedCategories(6),
-      getFeaturedProducts(6),
-      getBrands(),
-      getFeaturedProjects(3),
-      getTestimonials(),
-      getFAQs(),
+      safe(getActiveBanners(), []),
+      safe(getFeaturedCategories(6), []),
+      safe(getFeaturedProducts(6), []),
+      safe(getBrands(), []),
+      safe(getFeaturedProjects(3), []),
+      safe(getTestimonials(), []),
+      safe(getFAQs(), []),
     ]);
 
   return (
