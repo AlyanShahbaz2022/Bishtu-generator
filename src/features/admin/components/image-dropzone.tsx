@@ -1,7 +1,14 @@
 "use client";
 
-import { ArrowDown, ArrowUp, ImagePlus, Loader2, Plus, X } from "lucide-react";
-import { useRef, useState } from "react";
+import {
+  ArrowLeft,
+  ArrowRight,
+  ImagePlus,
+  Loader2,
+  Plus,
+  X,
+} from "lucide-react";
+import { useEffect, useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
@@ -23,8 +30,8 @@ type Props = {
 };
 
 /**
- * Drag-and-drop image uploader backed by Cloudinary unsigned uploads. Shows
- * thumbnails with reorder/delete. When Cloudinary isn't configured it falls
+ * Drag-and-drop image uploader backed by Cloudinary unsigned uploads. Shows a
+ * thumbnail grid with reorder/delete. When Cloudinary isn't configured it falls
  * back to a paste-a-URL input so admins are never blocked.
  */
 export function ImageDropzone({
@@ -37,8 +44,22 @@ export function ImageDropzone({
   const [uploading, setUploading] = useState(false);
   const [urlInput, setUrlInput] = useState("");
   const inputRef = useRef<HTMLInputElement>(null);
+  // Ref-counter so drag state doesn't flicker when moving over child elements.
+  const dragDepth = useRef(0);
 
   const atCapacity = max != null && value.length >= max;
+
+  // Prevent the browser from navigating to a file if it's dropped just outside
+  // the zone (the usual reason "drag & drop doesn't work").
+  useEffect(() => {
+    const prevent = (e: DragEvent) => e.preventDefault();
+    window.addEventListener("dragover", prevent);
+    window.addEventListener("drop", prevent);
+    return () => {
+      window.removeEventListener("dragover", prevent);
+      window.removeEventListener("drop", prevent);
+    };
+  }, []);
 
   async function handleFiles(files: FileList | File[]) {
     const list = Array.from(files);
@@ -83,9 +104,17 @@ export function ImageDropzone({
 
   function onDrop(e: React.DragEvent) {
     e.preventDefault();
+    e.stopPropagation();
+    dragDepth.current = 0;
     setDragging(false);
     if (atCapacity || uploading) return;
-    if (e.dataTransfer.files?.length) handleFiles(e.dataTransfer.files);
+    const files = e.dataTransfer.files;
+    if (files?.length) handleFiles(files);
+  }
+
+  function openPicker() {
+    if (atCapacity || uploading) return;
+    inputRef.current?.click();
   }
 
   function addUrl() {
@@ -113,27 +142,40 @@ export function ImageDropzone({
       <Label>{label}</Label>
 
       {cloudinaryEnabled ? (
-        <button
-          type="button"
-          disabled={atCapacity || uploading}
-          onClick={() => inputRef.current?.click()}
-          onDragOver={(e) => {
+        <div
+          role="button"
+          tabIndex={0}
+          aria-label="Upload images"
+          onClick={openPicker}
+          onKeyDown={(e) => {
+            if (e.key === "Enter" || e.key === " ") {
+              e.preventDefault();
+              openPicker();
+            }
+          }}
+          onDragEnter={(e) => {
             e.preventDefault();
+            dragDepth.current += 1;
             if (!atCapacity && !uploading) setDragging(true);
           }}
-          onDragLeave={() => setDragging(false)}
+          onDragOver={(e) => e.preventDefault()}
+          onDragLeave={(e) => {
+            e.preventDefault();
+            dragDepth.current -= 1;
+            if (dragDepth.current <= 0) setDragging(false);
+          }}
           onDrop={onDrop}
           className={cn(
-            "flex w-full flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-6 text-sm transition-colors",
+            "flex w-full cursor-pointer flex-col items-center justify-center gap-2 rounded-xl border-2 border-dashed p-8 text-center text-sm transition-colors outline-none",
             dragging
-              ? "border-primary bg-primary/5"
-              : "border-border hover:border-primary/50",
-            (atCapacity || uploading) && "cursor-not-allowed opacity-60",
+              ? "border-primary bg-primary/10 ring-2 ring-primary/40"
+              : "border-border hover:border-primary/50 hover:bg-muted/40",
+            (atCapacity || uploading) && "pointer-events-none opacity-60",
           )}
         >
           {uploading ? (
             <>
-              <Loader2 className="size-6 animate-spin text-primary" />
+              <Loader2 className="size-7 animate-spin text-primary" />
               <span className="text-muted-foreground">Uploading…</span>
             </>
           ) : atCapacity ? (
@@ -142,12 +184,15 @@ export function ImageDropzone({
             </span>
           ) : (
             <>
-              <ImagePlus className="size-6 text-muted-foreground" />
+              <ImagePlus className="size-7 text-primary" />
               <span className="font-medium">
-                Drag &amp; drop or click to upload
+                {dragging
+                  ? "Drop to upload"
+                  : "Drag & drop images here, or click to browse"}
               </span>
               <span className="text-xs text-muted-foreground">
                 JPG, PNG, WebP or AVIF · up to {MAX_MB}MB
+                {max != null && max > 1 ? ` · up to ${max} images` : ""}
               </span>
             </>
           )}
@@ -162,7 +207,7 @@ export function ImageDropzone({
               e.target.value = "";
             }}
           />
-        </button>
+        </div>
       ) : (
         // Fallback: Cloudinary not configured → paste an image URL.
         <div className="space-y-1">
@@ -196,50 +241,59 @@ export function ImageDropzone({
         </div>
       )}
 
+      {/* Thumbnail grid */}
       {value.length > 0 && (
-        <ul className="space-y-2">
+        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4">
           {value.map((img, i) => (
             <li
               key={`${img}-${i}`}
-              className="flex items-center gap-3 rounded-lg border border-border p-2"
+              className="group relative overflow-hidden rounded-lg border border-border"
             >
-              <AdminImage src={img} className="size-12 rounded object-cover" />
-              <span className="flex-1 truncate text-xs text-muted-foreground">
-                {img}
-              </span>
-              {value.length > 1 && (
-                <>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    aria-label="Move up"
-                    disabled={i === 0}
-                    onClick={() => move(i, -1)}
-                  >
-                    <ArrowUp className="size-4" />
-                  </Button>
-                  <Button
-                    type="button"
-                    size="icon-sm"
-                    variant="ghost"
-                    aria-label="Move down"
-                    disabled={i === value.length - 1}
-                    onClick={() => move(i, 1)}
-                  >
-                    <ArrowDown className="size-4" />
-                  </Button>
-                </>
+              <AdminImage
+                src={img}
+                className="aspect-square w-full object-cover"
+              />
+              {i === 0 && value.length > 1 && (
+                <span className="absolute top-1 left-1 rounded bg-primary px-1.5 py-0.5 text-[10px] font-medium text-primary-foreground">
+                  Cover
+                </span>
               )}
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                aria-label="Remove"
-                onClick={() => remove(i)}
-              >
-                <X className="size-4" />
-              </Button>
+
+              {/* Hover controls */}
+              <div className="absolute inset-x-0 bottom-0 flex items-center justify-between gap-1 bg-gradient-to-t from-black/70 to-transparent p-1 opacity-0 transition-opacity group-hover:opacity-100">
+                <div className="flex gap-0.5">
+                  {value.length > 1 && (
+                    <>
+                      <button
+                        type="button"
+                        aria-label="Move left"
+                        disabled={i === 0}
+                        onClick={() => move(i, -1)}
+                        className="rounded bg-white/20 p-1 text-white hover:bg-white/40 disabled:opacity-30"
+                      >
+                        <ArrowLeft className="size-3.5" />
+                      </button>
+                      <button
+                        type="button"
+                        aria-label="Move right"
+                        disabled={i === value.length - 1}
+                        onClick={() => move(i, 1)}
+                        className="rounded bg-white/20 p-1 text-white hover:bg-white/40 disabled:opacity-30"
+                      >
+                        <ArrowRight className="size-3.5" />
+                      </button>
+                    </>
+                  )}
+                </div>
+                <button
+                  type="button"
+                  aria-label="Remove image"
+                  onClick={() => remove(i)}
+                  className="rounded bg-destructive/80 p-1 text-white hover:bg-destructive"
+                >
+                  <X className="size-3.5" />
+                </button>
+              </div>
             </li>
           ))}
         </ul>
