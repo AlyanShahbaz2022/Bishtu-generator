@@ -18,6 +18,7 @@ import {
   TextAreaField,
   TextField,
 } from "@/features/leads/components/fields";
+import { ImageDropzone } from "@/features/admin/components/image-dropzone";
 import {
   createCategory,
   updateCategory,
@@ -37,6 +38,9 @@ export function CategoryForm({ category }: { category?: Category }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [pending, start] = useTransition();
+  const [image, setImage] = useState<string[]>(
+    category?.image ? [category.image] : [],
+  );
 
   function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -45,7 +49,7 @@ export function CategoryForm({ category }: { category?: Category }) {
       name: String(f.get("name") ?? ""),
       slug: String(f.get("slug") ?? ""),
       fuelType: (f.get("fuelType") as "DIESEL" | "PETROL" | "GAS") || undefined,
-      image: String(f.get("image") ?? ""),
+      image: image[0] ?? "",
       description: String(f.get("description") ?? ""),
       sortOrder: Number(f.get("sortOrder") ?? 0),
     };
@@ -114,12 +118,18 @@ export function CategoryForm({ category }: { category?: Category }) {
               defaultValue={String(category?.sortOrder ?? 0)}
             />
           </div>
-          <TextField
-            name="image"
-            label="Image URL"
-            defaultValue={category?.image ?? ""}
+          <ImageDropzone
+            label="Image"
+            value={image}
+            onChange={setImage}
+            max={1}
           />
-          <TextAreaField name="description" label="Description" rows={3} />
+          <TextAreaField
+            name="description"
+            label="Description"
+            rows={3}
+            defaultValue={category?.description ?? ""}
+          />
           <div className="flex justify-end gap-2">
             <Button
               type="button"

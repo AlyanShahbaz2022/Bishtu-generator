@@ -1,14 +1,11 @@
 "use client";
 
-import { ArrowDown, ArrowUp, Plus, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef, useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { AdminImage } from "@/features/admin/components/admin-image";
+import { ImageDropzone } from "@/features/admin/components/image-dropzone";
 import {
   CheckboxField,
   SelectField,
@@ -288,7 +285,7 @@ export function ProductForm({
       </Section>
 
       <Section title="Media" full>
-        <ImagesEditor images={images} setImages={setImages} />
+        <ImageDropzone value={images} onChange={setImages} label="Images" />
         <div className="mt-4">
           <TextField
             name="datasheetUrl"
@@ -360,94 +357,5 @@ function Section({
       <h2 className="mb-4 font-heading font-semibold">{title}</h2>
       <div className={full ? "" : "grid gap-4 sm:grid-cols-2"}>{children}</div>
     </section>
-  );
-}
-
-function ImagesEditor({
-  images,
-  setImages,
-}: {
-  images: string[];
-  setImages: (next: string[]) => void;
-}) {
-  const [url, setUrl] = useState("");
-
-  function add() {
-    const v = url.trim();
-    if (!v) return;
-    setImages([...images, v]);
-    setUrl("");
-  }
-  function move(i: number, dir: -1 | 1) {
-    const j = i + dir;
-    if (j < 0 || j >= images.length) return;
-    const next = [...images];
-    [next[i], next[j]] = [next[j], next[i]];
-    setImages(next);
-  }
-
-  return (
-    <div className="space-y-3">
-      <Label>Images</Label>
-      <div className="flex gap-2">
-        <Input
-          value={url}
-          onChange={(e) => setUrl(e.target.value)}
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              add();
-            }
-          }}
-          placeholder="https://image-url…"
-        />
-        <Button type="button" variant="outline" onClick={add}>
-          <Plus className="size-4" />
-          Add
-        </Button>
-      </div>
-      {images.length > 0 && (
-        <ul className="space-y-2">
-          {images.map((img, i) => (
-            <li
-              key={`${img}-${i}`}
-              className="flex items-center gap-3 rounded-lg border border-border p-2"
-            >
-              <AdminImage src={img} className="size-12 rounded object-cover" />
-              <span className="flex-1 truncate text-xs text-muted-foreground">
-                {img}
-              </span>
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                aria-label="Move up"
-                onClick={() => move(i, -1)}
-              >
-                <ArrowUp className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                aria-label="Move down"
-                onClick={() => move(i, 1)}
-              >
-                <ArrowDown className="size-4" />
-              </Button>
-              <Button
-                type="button"
-                size="icon-sm"
-                variant="ghost"
-                aria-label="Remove"
-                onClick={() => setImages(images.filter((_, idx) => idx !== i))}
-              >
-                <X className="size-4" />
-              </Button>
-            </li>
-          ))}
-        </ul>
-      )}
-    </div>
   );
 }
