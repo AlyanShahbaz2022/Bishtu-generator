@@ -253,3 +253,40 @@ A lean first launch = **Phases 0–5 + 7 (partial) + 8 (homepage) + 9–10**:
 catalog, cart/checkout with manual payments, basic admin, homepage, hardening.
 Quote/Rental/Service (P6) can ship in the same wave since they are high-value
 B2B leads and relatively low-complexity forms — recommend including P6 in MVP.
+
+1. why the movment is very slow like from when i click on button like products on admin panel why i ttakes a lot of time, fix it
+1. Use a loader on whole website if it takes time
+
+1. On admin panel when i click on Home Page I get this
+
+## Error Type
+
+Runtime Error
+
+## Error Message
+
+Functions cannot be passed directly to Client Components unless you explicitly expose it by marking it with "use server". Or maybe you meant to call this function rather than return it.
+<... checked={true} action={function action} label=...>
+^^^^^^^^^^^^^^^^^
+at stringify (<anonymous>:1:18)
+at stringify (<anonymous>:1:18)
+at <anonymous> (src\features\admin\components\data-table.tsx:53:17)
+at Array.map (<anonymous>:1:18)
+at <anonymous> (src\features\admin\components\data-table.tsx:52:24)
+at Array.map (<anonymous>:1:18)
+at DataTable (src\features\admin\components\data-table.tsx:50:17)
+at HomepageAdminPage (src\app\admin\homepage\page.tsx:83:7)
+
+## Code Frame
+
+51 | <TableRow key={getKey(row)}>
+52 | {columns.map((col, i) => (
+
+> 53 | <TableCell key={i} className={cn(col.className)}>
+> | ^
+> 54 | {col.cell(row)}
+> 55 | </TableCell>
+> 56 | ))}
+> Next.js version: 16.2.9 (Turbopack)
+
+4. remove the category section and make it manage all deapartment, category and sub categpry form navigation on admin panel, Also make dynamic nav links from admin panel

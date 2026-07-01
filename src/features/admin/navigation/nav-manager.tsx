@@ -1,12 +1,24 @@
 "use client";
 
-import { ChevronDown, ChevronUp, Pencil, Plus, X } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, Plus, Sliders, X } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
 
 import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import {
+  SelectField,
+  TextAreaField,
+  TextField,
+} from "@/features/leads/components/fields";
 import { ConfirmDelete } from "@/features/admin/components/confirm-delete";
 import { InlineToggle } from "@/features/admin/components/inline-toggle";
 import {
@@ -15,6 +27,7 @@ import {
   moveNavItem,
   renameNavItem,
   toggleNavItem,
+  updateNavCategory,
   updateNavHref,
 } from "@/features/admin/navigation/actions";
 import type { AdminNavItem } from "@/services/navigation";
@@ -157,6 +170,7 @@ function NavRow({
             label="Visible"
             action={(next) => toggleNavItem(item.id, next)}
           />
+          {item.categoryId && <CategoryDetailsDialog item={item} />}
           {!editing && (
             <Button
               size="icon-sm"
@@ -170,7 +184,11 @@ function NavRow({
           <ConfirmDelete
             action={() => deleteNavItem(item.id)}
             title={`Delete “${item.label}”?`}
-            description="This also deletes all of its sub-items. Linked categories are kept."
+            description={
+              item.category && item.category.productCount > 0
+                ? `This category has ${item.category.productCount} product(s); deletion is blocked until they are moved. Sub-items are also removed.`
+                : "This also deletes all of its sub-items and the linked (empty) category."
+            }
             successMessage="Deleted"
           />
         </div>
@@ -253,5 +271,91 @@ function AddForm({
         <X className="size-4" />
       </Button>
     </div>
+  );
+}
+
+/**
+ * Edit the storefront Category metadata (fuel type, image, description) linked
+ * to a level-1 nav item — replaces the standalone Categories admin page.
+ */
+function CategoryDetailsDialog({ item }: { item: AdminNavItem }) {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [pending, start] = useTransition();
+  const cat = item.category;
+
+  function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    const f = new FormData(event.currentTarget);
+    const input = {
+      fuelType: (f.get("fuelType") as "DIESEL" | "PETROL" | "GAS") || undefined,
+      image: String(f.get("image") ?? ""),
+      description: String(f.get("description") ?? ""),
+    };
+    start(async () => {
+      const res = await updateNavCategory(item.id, input);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      toast.success("Category details saved");
+      setOpen(false);
+      router.refresh();
+    });
+  }
+
+  return (
+    <Dialog open={open} onOpenChange={setOpen}>
+      <DialogTrigger asChild>
+        <Button size="icon-sm" variant="ghost" aria-label="Category details">
+          <Sliders className="size-4" />
+        </Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle>Category details — {item.label}</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            {cat ? `${cat.productCount} product(s)` : "Linked category"}. The
+            name is edited via the nav label above.
+          </p>
+          <SelectField
+            name="fuelType"
+            label="Fuel type"
+            defaultValue={cat?.fuelType ?? ""}
+            options={[
+              { value: "", label: "None" },
+              { value: "DIESEL", label: "Diesel" },
+              { value: "PETROL", label: "Petrol" },
+              { value: "GAS", label: "Gas" },
+            ]}
+          />
+          <TextField
+            name="image"
+            label="Image URL"
+            defaultValue={cat?.image ?? ""}
+          />
+          <TextAreaField
+            name="description"
+            label="Description"
+            rows={3}
+            defaultValue={cat?.description ?? ""}
+          />
+          <div className="flex justify-end gap-2">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setOpen(false)}
+            >
+              Cancel
+            </Button>
+            <Button type="submit" disabled={pending}>
+              {pending ? "Saving…" : "Save"}
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }

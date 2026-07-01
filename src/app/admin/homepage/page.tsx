@@ -53,7 +53,7 @@ export default async function HomepageAdminPage() {
       cell: (r) => (
         <InlineToggle
           checked={r.isActive}
-          action={(next) => toggleBanner(r.id, next)}
+          action={toggleBanner.bind(null, r.id)}
           label="Active"
         />
       ),

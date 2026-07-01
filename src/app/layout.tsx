@@ -1,7 +1,9 @@
 import type { Metadata, Viewport } from "next";
 import { Inter, Manrope } from "next/font/google";
 import { GoogleAnalytics } from "@next/third-parties/google";
+import { Suspense } from "react";
 
+import { RouteProgress } from "@/components/layout/route-progress";
 import { JsonLd } from "@/components/seo/json-ld";
 import { siteConfig } from "@/constants/site";
 import { env } from "@/lib/env";
@@ -87,6 +89,9 @@ export default function RootLayout({
         >
           Skip to content
         </a>
+        <Suspense fallback={null}>
+          <RouteProgress />
+        </Suspense>
         <JsonLd data={organizationSchema()} />
         <JsonLd data={websiteSchema()} />
         <JsonLd data={localBusinessSchema()} />

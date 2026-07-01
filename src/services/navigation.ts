@@ -59,6 +59,14 @@ export const getStorefrontNav = unstable_cache(
   { tags: [NAV_TAG] },
 );
 
+/** Category metadata surfaced inline in the nav manager (level-1 items). */
+export type AdminNavCategory = {
+  fuelType: string | null;
+  image: string | null;
+  description: string | null;
+  productCount: number;
+};
+
 export type AdminNavItem = {
   id: string;
   label: string;
@@ -68,6 +76,7 @@ export type AdminNavItem = {
   categoryId: string | null;
   isEnabled: boolean;
   sortOrder: number;
+  category: AdminNavCategory | null;
   children: AdminNavItem[];
 };
 
@@ -75,6 +84,16 @@ export type AdminNavItem = {
 export async function getAdminNavTree(): Promise<AdminNavItem[]> {
   const items = await prisma.navItem.findMany({
     orderBy: { sortOrder: "asc" },
+    include: {
+      category: {
+        select: {
+          fuelType: true,
+          image: true,
+          description: true,
+          _count: { select: { products: true } },
+        },
+      },
+    },
   });
 
   const build = (parentId: string | null, level: number): AdminNavItem[] =>
@@ -89,6 +108,14 @@ export async function getAdminNavTree(): Promise<AdminNavItem[]> {
         categoryId: i.categoryId,
         isEnabled: i.isEnabled,
         sortOrder: i.sortOrder,
+        category: i.category
+          ? {
+              fuelType: i.category.fuelType,
+              image: i.category.image,
+              description: i.category.description,
+              productCount: i.category._count.products,
+            }
+          : null,
         children: build(i.id, level + 1),
       }));
 

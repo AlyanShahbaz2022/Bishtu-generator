@@ -60,8 +60,60 @@ export async function addNavItem(input: z.infer<typeof addSchema>) {
 export async function renameNavItem(id: string, label: string) {
   await requireAdmin();
   const value = z.string().min(1).max(80).parse(label);
-  await prisma.navItem.update({ where: { id }, data: { label: value } });
+  const item = await prisma.navItem.update({
+    where: { id },
+    data: { label: value },
+  });
+  // Keep a linked storefront Category's name in sync with its nav label.
+  if (item.categoryId) {
+    await prisma.category.update({
+      where: { id: item.categoryId },
+      data: { name: value },
+    });
+  }
   revalidate();
+}
+
+const categorySchema = z.object({
+  fuelType: z.enum(["DIESEL", "PETROL", "GAS"]).optional(),
+  image: z.string().url().optional().or(z.literal("")),
+  description: z.string().max(1000).optional().or(z.literal("")),
+});
+
+export type NavCategoryResult = { ok: true } | { ok: false; error: string };
+
+/**
+ * Edit the storefront Category linked to a level-1 nav item (fuel type, image,
+ * description) — the metadata that used to live on the standalone Categories
+ * page. The nav label stays the source of truth for the category name.
+ */
+export async function updateNavCategory(
+  navItemId: string,
+  input: z.input<typeof categorySchema>,
+): Promise<NavCategoryResult> {
+  await requireAdmin();
+  const parsed = categorySchema.safeParse(input);
+  if (!parsed.success) {
+    return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid" };
+  }
+  const navItem = await prisma.navItem.findUnique({
+    where: { id: navItemId },
+    select: { categoryId: true },
+  });
+  if (!navItem?.categoryId) {
+    return { ok: false, error: "This item is not linked to a category." };
+  }
+  const d = parsed.data;
+  await prisma.category.update({
+    where: { id: navItem.categoryId },
+    data: {
+      fuelType: d.fuelType ?? null,
+      image: d.image || null,
+      description: d.description || null,
+    },
+  });
+  revalidate();
+  return { ok: true };
 }
 
 export async function updateNavHref(id: string, href: string) {
@@ -81,8 +133,35 @@ export async function toggleNavItem(id: string, isEnabled: boolean) {
 
 export async function deleteNavItem(id: string) {
   await requireAdmin();
+  const item = await prisma.navItem.findUnique({
+    where: { id },
+    select: { categoryId: true },
+  });
+
+  // Block deletion while a linked category still has products, mirroring the
+  // old Categories delete-guard so inventory is never orphaned.
+  if (item?.categoryId) {
+    const productCount = await prisma.product.count({
+      where: { categoryId: item.categoryId },
+    });
+    if (productCount > 0) {
+      throw new Error(
+        `This category has ${productCount} product(s). Move or delete them first.`,
+      );
+    }
+  }
+
   // Children cascade-delete via the self-relation onDelete: Cascade.
   await prisma.navItem.delete({ where: { id } });
+
+  // Remove the now-unused linked category (safe: no products remain).
+  if (item?.categoryId) {
+    await prisma.category
+      .delete({ where: { id: item.categoryId } })
+      .catch(() => {
+        // Category may be referenced elsewhere; leave it if delete fails.
+      });
+  }
   revalidate();
 }
 

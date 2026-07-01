@@ -39,7 +39,6 @@ import {
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
-import { servicesMenu } from "@/constants/navigation";
 import { siteConfig } from "@/constants/site";
 import type { StorefrontNavDepartment } from "@/services/navigation";
 import { cn } from "@/lib/utils";
@@ -136,56 +135,34 @@ function DesktopNav({ nav }: { nav: StorefrontNavDepartment[] }) {
           About
         </NavLink>
 
-        {nav.length > 0 && (
-          <NavigationMenuItem>
-            <NavigationMenuTrigger>Products</NavigationMenuTrigger>
-            <NavigationMenuContent>
-              <div className="grid w-[640px] grid-cols-3 gap-3 p-4">
-                {nav.map((dept) => (
-                  <div key={dept.id}>
-                    <p className="mb-2 px-2 text-xs font-semibold tracking-wide text-muted-foreground uppercase">
-                      {dept.label}
-                    </p>
-                    <ul className="space-y-1">
-                      {dept.children.map((cat) => (
-                        <li key={cat.id}>
-                          <NavigationMenuLink asChild>
-                            <Link
-                              href={cat.href ?? "/products"}
-                              className="block rounded-md px-2 py-1.5 text-sm font-medium hover:bg-muted"
-                            >
-                              {cat.label}
-                            </Link>
-                          </NavigationMenuLink>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                ))}
-              </div>
-            </NavigationMenuContent>
-          </NavigationMenuItem>
+        {/* Departments are fully managed from the admin Navigation manager. */}
+        {nav.map((dept) =>
+          dept.children.length > 0 ? (
+            <NavigationMenuItem key={dept.id}>
+              <NavigationMenuTrigger>{dept.label}</NavigationMenuTrigger>
+              <NavigationMenuContent>
+                <ul className="grid w-[320px] gap-1 p-3">
+                  {dept.children.map((cat) => (
+                    <li key={cat.id}>
+                      <NavigationMenuLink asChild>
+                        <Link
+                          href={cat.href ?? "/products"}
+                          className="block rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                        >
+                          {cat.label}
+                        </Link>
+                      </NavigationMenuLink>
+                    </li>
+                  ))}
+                </ul>
+              </NavigationMenuContent>
+            </NavigationMenuItem>
+          ) : (
+            <NavLink key={dept.id} href={dept.href ?? "/products"}>
+              {dept.label}
+            </NavLink>
+          ),
         )}
-
-        <NavigationMenuItem>
-          <NavigationMenuTrigger>Services</NavigationMenuTrigger>
-          <NavigationMenuContent>
-            <ul className="grid w-[320px] gap-1 p-3">
-              {servicesMenu.map((link) => (
-                <li key={link.title}>
-                  <NavigationMenuLink asChild>
-                    <Link
-                      href={link.href}
-                      className="block rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
-                    >
-                      {link.title}
-                    </Link>
-                  </NavigationMenuLink>
-                </li>
-              ))}
-            </ul>
-          </NavigationMenuContent>
-        </NavigationMenuItem>
 
         <NavLink href="/industries" active={pathname.startsWith("/industries")}>
           Industries
