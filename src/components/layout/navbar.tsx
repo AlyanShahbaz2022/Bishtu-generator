@@ -143,6 +143,18 @@ function DesktopNav({ nav }: { nav: StorefrontNavDepartment[] }) {
             <NavigationMenuItem key={dept.id}>
               <NavigationMenuTrigger>{dept.label}</NavigationMenuTrigger>
               <NavigationMenuContent>
+                {dept.href && (
+                  <div className="border-b border-border px-5 pt-4 pb-3">
+                    <NavigationMenuLink asChild>
+                      <Link
+                        href={dept.href}
+                        className="text-sm font-semibold text-primary hover:underline"
+                      >
+                        View all {dept.label} →
+                      </Link>
+                    </NavigationMenuLink>
+                  </div>
+                )}
                 <ul className="grid w-max max-w-[720px] grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-4 p-5">
                   {dept.children.map((cat) => (
                     <li key={cat.id} className="min-w-[180px]">

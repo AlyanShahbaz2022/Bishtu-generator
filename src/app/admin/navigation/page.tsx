@@ -15,7 +15,7 @@ export default async function NavigationPage() {
     <div className="max-w-3xl">
       <PageHeader
         title="Navigation & Categories"
-        description="Build the storefront menu — departments, categories, and sub-categories. Adding a category creates a matching storefront category; use the sliders icon to edit its fuel type, image, and description. Changes apply instantly."
+        description="Build the storefront menu — departments, categories, and sub-categories. Every item you add gets its own storefront page at /category/<name> automatically and appears on the navbar. Use the sliders icon to edit a category's fuel type, image, and description. Changes apply instantly."
       />
       <NavManager tree={tree} />
     </div>

@@ -30,27 +30,21 @@ export async function addNavItem(input: z.infer<typeof addSchema>) {
   });
   const sortOrder = (max._max.sortOrder ?? -1) + 1;
 
-  let categoryId: string | undefined;
-  let href: string | undefined;
-
-  // Auto-sync: a level-1 nav item maps to a storefront Category.
-  if (level === 1) {
-    const slug = slugify(label);
-    const existing = await prisma.category.findUnique({ where: { slug } });
-    const category =
-      existing ??
-      (await prisma.category.create({ data: { name: label, slug } }));
-    categoryId = category.id;
-    href = `/category/${slug}`;
-  }
+  // Auto-route: every nav item (department, category, sub-category) maps to a
+  // storefront Category and gets a real /category/{slug} page. A pre-existing
+  // category with the same slug is reused so we never create duplicates.
+  const slug = slugify(label);
+  const existing = await prisma.category.findUnique({ where: { slug } });
+  const category =
+    existing ?? (await prisma.category.create({ data: { name: label, slug } }));
 
   await prisma.navItem.create({
     data: {
       label,
       level,
       parentId: parentId ?? null,
-      categoryId,
-      href,
+      categoryId: category.id,
+      href: `/category/${slug}`,
       sortOrder,
     },
   });
@@ -60,17 +54,30 @@ export async function addNavItem(input: z.infer<typeof addSchema>) {
 export async function renameNavItem(id: string, label: string) {
   await requireAdmin();
   const value = z.string().min(1).max(80).parse(label);
-  const item = await prisma.navItem.update({
-    where: { id },
-    data: { label: value },
-  });
-  // Keep a linked storefront Category's name in sync with its nav label.
-  if (item.categoryId) {
-    await prisma.category.update({
-      where: { id: item.categoryId },
-      data: { name: value },
+  const current = await prisma.navItem.findUnique({ where: { id } });
+  if (!current) return;
+
+  // Regenerate the slug/URL from the new label so the route reflects the name —
+  // unless another category already owns that slug, in which case keep the
+  // existing URL to avoid a collision.
+  let href = current.href;
+  if (current.categoryId) {
+    const newSlug = slugify(value);
+    const clash = await prisma.category.findFirst({
+      where: { slug: newSlug, NOT: { id: current.categoryId } },
+      select: { id: true },
     });
+    await prisma.category.update({
+      where: { id: current.categoryId },
+      data: clash ? { name: value } : { name: value, slug: newSlug },
+    });
+    if (!clash) href = `/category/${newSlug}`;
   }
+
+  await prisma.navItem.update({
+    where: { id },
+    data: { label: value, href },
+  });
   revalidate();
 }
 

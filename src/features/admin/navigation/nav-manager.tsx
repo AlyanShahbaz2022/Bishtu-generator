@@ -136,7 +136,7 @@ function NavRow({
                 value={href}
                 onChange={(e) => setHref(e.target.value)}
                 className="h-8 w-56"
-                placeholder="/href (optional)"
+                placeholder="Auto (/category/…) — override optional"
               />
               <Button size="sm" onClick={saveEdits}>
                 Save
