@@ -25,6 +25,10 @@ const nextConfig: NextConfig = {
       // Placeholder imagery until real assets are uploaded (Phase 7 media).
       { protocol: "https", hostname: "picsum.photos" },
       { protocol: "https", hostname: "images.unsplash.com" },
+      // Admins may paste product image URLs from any HTTPS host. Allow all
+      // remote HTTPS images so the catalog never 500s on an unlisted host.
+      // (Prefer uploading to Cloudinary — external URLs can expire.)
+      { protocol: "https", hostname: "**" },
     ],
     formats: ["image/avif", "image/webp"],
   },
