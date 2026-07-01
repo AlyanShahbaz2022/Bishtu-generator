@@ -4,9 +4,12 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { getBlogPostBySlug, getRelatedPosts } from "@/services/content";
+import { buildMetadata } from "@/lib/seo";
+import { articleSchema, breadcrumbSchema } from "@/lib/structured-data";
 
 export async function generateMetadata({
   params,
@@ -16,13 +19,16 @@ export async function generateMetadata({
   const { slug } = await params;
   const post = await getBlogPostBySlug(slug);
   if (!post) return { title: "Article not found" };
-  return {
-    title: post.title,
-    description: post.excerpt ?? undefined,
-    openGraph: post.coverImage
-      ? { images: [{ url: post.coverImage }] }
+  return buildMetadata({
+    title: post.seoTitle ?? post.title,
+    description: post.seoDescription ?? post.excerpt ?? undefined,
+    path: `/blog/${post.slug}`,
+    type: "article",
+    publishedTime: post.publishedAt?.toISOString(),
+    images: post.coverImage
+      ? [{ url: post.coverImage, alt: post.title }]
       : undefined,
-  };
+  });
 }
 
 export default async function BlogPostPage({
@@ -39,6 +45,24 @@ export default async function BlogPostPage({
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">
+      <JsonLd
+        data={articleSchema({
+          title: post.title,
+          slug: post.slug,
+          description: post.excerpt,
+          image: post.coverImage,
+          publishedTime: post.publishedAt,
+          modifiedTime: post.updatedAt,
+          author: post.author?.name,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Blog", path: "/blog" },
+          { name: post.title, path: `/blog/${post.slug}` },
+        ])}
+      />
       <Breadcrumbs
         items={[{ title: "Blog", href: "/blog" }, { title: post.title }]}
       />

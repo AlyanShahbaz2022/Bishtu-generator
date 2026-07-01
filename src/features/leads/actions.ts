@@ -5,6 +5,7 @@ import { z } from "zod";
 import { sendLeadNotificationEmail } from "@/lib/email";
 import { getServerSession } from "@/lib/auth-session";
 import { prisma } from "@/lib/prisma";
+import { guardFormSubmission } from "@/lib/rate-limit";
 
 export type LeadResult = { ok: true } | { ok: false; error: string };
 
@@ -38,6 +39,8 @@ const quoteSchema = z.object({
 export type QuoteInput = z.input<typeof quoteSchema>;
 
 export async function submitQuote(input: QuoteInput): Promise<LeadResult> {
+  const limited = await guardFormSubmission("quote");
+  if (!limited.ok) return limited;
   const parsed = quoteSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error);
   const d = parsed.data;
@@ -90,6 +93,8 @@ const rentalSchema = z.object({
 export type RentalInput = z.input<typeof rentalSchema>;
 
 export async function submitRental(input: RentalInput): Promise<LeadResult> {
+  const limited = await guardFormSubmission("rental");
+  if (!limited.ok) return limited;
   const parsed = rentalSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error);
   const d = parsed.data;
@@ -141,6 +146,8 @@ const serviceSchema = z.object({
 export type ServiceInput = z.input<typeof serviceSchema>;
 
 export async function submitService(input: ServiceInput): Promise<LeadResult> {
+  const limited = await guardFormSubmission("service");
+  if (!limited.ok) return limited;
   const parsed = serviceSchema.safeParse(input);
   if (!parsed.success) return fail(parsed.error);
   const d = parsed.data;

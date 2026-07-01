@@ -3,12 +3,14 @@ import type { Metadata } from "next";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { industries } from "@/constants/marketing";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Industries",
   description:
     "Power solutions for manufacturing, healthcare, data centers, construction, and more.",
-};
+  path: "/industries",
+});
 
 const DETAILS: Record<string, string> = {
   Manufacturing:

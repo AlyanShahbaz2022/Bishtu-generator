@@ -75,6 +75,13 @@ export const auth = betterAuth({
     cookieCache: { enabled: true, maxAge: 5 * 60 },
   },
 
+  advanced: {
+    // Force the `Secure` + `__Secure-`-prefixed cookies in production
+    // (TRD §20 — secure cookies). Left off in dev so http://localhost works.
+    useSecureCookies: env.NODE_ENV === "production",
+    defaultCookieAttributes: { sameSite: "lax", httpOnly: true },
+  },
+
   // nextCookies() must be the last plugin so Set-Cookie headers propagate
   // through Next.js server actions / route handlers.
   plugins: [nextCookies()],

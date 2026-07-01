@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { JsonLd } from "@/components/seo/json-ld";
 import { Badge } from "@/components/ui/badge";
 import { ProductCta } from "@/features/products/components/product-cta";
 import { ProductGallery } from "@/features/products/components/product-gallery";
@@ -15,6 +16,8 @@ import {
   type ProductListItem,
 } from "@/services/products";
 import { formatPrice } from "@/lib/format";
+import { buildMetadata } from "@/lib/seo";
+import { breadcrumbSchema, productSchema } from "@/lib/structured-data";
 
 type Params = { slug: string };
 
@@ -26,13 +29,14 @@ export async function generateMetadata({
   const { slug } = await params;
   const product = await getProductBySlug(slug);
   if (!product) return { title: "Product not found" };
-  return {
+  return buildMetadata({
     title: product.name,
     description: product.shortDescription ?? product.description ?? undefined,
-    openGraph: product.images[0]
-      ? { images: [{ url: product.images[0].url }] }
+    path: `/product/${product.slug}`,
+    images: product.images[0]
+      ? [{ url: product.images[0].url, alt: product.name }]
       : undefined,
-  };
+  });
 }
 
 export default async function ProductPage({
@@ -52,6 +56,29 @@ export default async function ProductPage({
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 lg:px-8">
+      <JsonLd
+        data={productSchema({
+          name: product.name,
+          slug: product.slug,
+          description: product.shortDescription ?? product.description,
+          image: product.images[0]?.url,
+          brand: product.brand?.name,
+          sku: product.sku,
+          price: onSale ? product.salePrice! : product.price,
+          inStock,
+        })}
+      />
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "Products", path: "/products" },
+          {
+            name: product.category.name,
+            path: `/category/${product.category.slug}`,
+          },
+          { name: product.name, path: `/product/${product.slug}` },
+        ])}
+      />
       <Breadcrumbs
         items={[
           { title: "Products", href: "/products" },

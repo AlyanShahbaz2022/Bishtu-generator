@@ -5,11 +5,13 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Card, CardContent } from "@/components/ui/card";
 import { ContactForm } from "@/features/marketing/contact-form";
 import { siteConfig } from "@/constants/site";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Contact",
   description: "Get in touch with Tech & Tune for sales, rentals, and service.",
-};
+  path: "/contact",
+});
 
 const wa = `https://wa.me/${siteConfig.contact.whatsapp.replace(/\D/g, "")}`;
 

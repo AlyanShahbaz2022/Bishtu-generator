@@ -5,12 +5,14 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Counter } from "@/components/motion/counter";
 import { Button } from "@/components/ui/button";
 import { stats, whyChoose } from "@/constants/marketing";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "About",
   description:
     "Tech & Tune is a premium industrial power solutions provider — generator sales, rentals, maintenance, and genuine spare parts.",
-};
+  path: "/about",
+});
 
 export default function AboutPage() {
   return (

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
+import { JsonLd } from "@/components/seo/json-ld";
 import {
   Accordion,
   AccordionContent,
@@ -10,12 +11,15 @@ import {
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
 import { getFAQs } from "@/services/content";
+import { buildMetadata } from "@/lib/seo";
+import { breadcrumbSchema, faqSchema } from "@/lib/structured-data";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "FAQ",
   description:
     "Answers to common questions about our generators, rentals, and service.",
-};
+  path: "/faq",
+});
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +28,19 @@ export default async function FaqPage() {
 
   return (
     <div className="mx-auto max-w-3xl px-4 py-12 lg:px-8">
+      {faqs.length > 0 && (
+        <JsonLd
+          data={faqSchema(
+            faqs.map((f) => ({ question: f.question, answer: f.answer })),
+          )}
+        />
+      )}
+      <JsonLd
+        data={breadcrumbSchema([
+          { name: "Home", path: "/" },
+          { name: "FAQ", path: "/faq" },
+        ])}
+      />
       <Breadcrumbs items={[{ title: "FAQ" }]} />
       <h1 className="mt-4 font-heading text-4xl font-extrabold tracking-tight">
         Frequently asked questions

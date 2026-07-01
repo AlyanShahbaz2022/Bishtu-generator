@@ -6,12 +6,14 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { services } from "@/constants/marketing";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Services",
   description:
     "Generator sales, rentals, repair & maintenance, overhauling, spare parts, and power consultation.",
-};
+  path: "/services",
+});
 
 export default function ServicesPage() {
   return (

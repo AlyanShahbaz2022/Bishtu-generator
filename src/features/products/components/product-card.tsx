@@ -15,7 +15,11 @@ export function ProductCard({ product }: { product: ProductListItem }) {
   return (
     <Card className="group overflow-hidden p-0 transition-shadow hover:shadow-lg">
       <div className="relative aspect-[4/3] overflow-hidden">
-        <Link href={`/product/${product.slug}`} aria-label={product.name}>
+        <Link
+          href={`/product/${product.slug}`}
+          aria-label={product.name}
+          className="absolute inset-0"
+        >
           {product.image ? (
             <Image
               src={product.image}

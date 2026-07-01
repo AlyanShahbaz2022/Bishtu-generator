@@ -3,6 +3,7 @@
 import { z } from "zod";
 
 import { sendLeadNotificationEmail } from "@/lib/email";
+import { guardFormSubmission } from "@/lib/rate-limit";
 
 export type ContactResult = { ok: true } | { ok: false; error: string };
 
@@ -19,6 +20,8 @@ export type ContactInput = z.input<typeof schema>;
 export async function submitContact(
   input: ContactInput,
 ): Promise<ContactResult> {
+  const limited = await guardFormSubmission("contact");
+  if (!limited.ok) return limited;
   const parsed = schema.safeParse(input);
   if (!parsed.success) {
     return { ok: false, error: parsed.error.issues[0]?.message ?? "Invalid" };

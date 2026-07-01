@@ -6,12 +6,14 @@ import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 import { getBlogPosts } from "@/services/content";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Blog",
   description:
     "Guides and insights on generators, power solutions, and maintenance.",
-};
+  path: "/blog",
+});
 
 export const dynamic = "force-dynamic";
 

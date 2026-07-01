@@ -8,12 +8,14 @@ import {
   type RawSearchParams,
 } from "@/features/products/params";
 import { getFilterOptions, getProducts } from "@/services/products";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Products",
   description:
     "Browse diesel, petrol, silent, and open-type generators, accessories, and genuine spare parts.",
-};
+  path: "/products",
+});
 
 export default async function ProductsPage({
   searchParams,

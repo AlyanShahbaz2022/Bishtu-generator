@@ -5,12 +5,14 @@ import Link from "next/link";
 import { Breadcrumbs } from "@/components/layout/breadcrumbs";
 import { Card } from "@/components/ui/card";
 import { getProjects } from "@/services/content";
+import { buildMetadata } from "@/lib/seo";
 
-export const metadata: Metadata = {
+export const metadata: Metadata = buildMetadata({
   title: "Projects",
   description:
     "Selected generator installations and rental deployments by Tech & Tune.",
-};
+  path: "/projects",
+});
 
 export const dynamic = "force-dynamic";
 

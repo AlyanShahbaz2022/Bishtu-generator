@@ -172,7 +172,7 @@ function DesktopNav({ nav }: { nav: StorefrontNavDepartment[] }) {
           <NavigationMenuContent>
             <ul className="grid w-[320px] gap-1 p-3">
               {servicesMenu.map((link) => (
-                <li key={link.href}>
+                <li key={link.title}>
                   <NavigationMenuLink asChild>
                     <Link
                       href={link.href}
