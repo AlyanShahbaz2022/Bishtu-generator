@@ -290,3 +290,4 @@ at HomepageAdminPage (src\app\admin\homepage\page.tsx:83:7)
 > Next.js version: 16.2.9 (Turbopack)
 
 4. remove the category section and make it manage all deapartment, category and sub categpry form navigation on admin panel, Also make dynamic nav links from admin panel
+   a
