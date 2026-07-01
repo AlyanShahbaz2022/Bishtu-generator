@@ -135,23 +135,41 @@ function DesktopNav({ nav }: { nav: StorefrontNavDepartment[] }) {
           About
         </NavLink>
 
-        {/* Departments are fully managed from the admin Navigation manager. */}
+        {/* Departments are fully managed from the admin Navigation manager.
+            Department = top-level item, Category = dropdown column,
+            Sub-category = links nested under each category. */}
         {nav.map((dept) =>
           dept.children.length > 0 ? (
             <NavigationMenuItem key={dept.id}>
               <NavigationMenuTrigger>{dept.label}</NavigationMenuTrigger>
               <NavigationMenuContent>
-                <ul className="grid w-[320px] gap-1 p-3">
+                <ul className="grid w-max max-w-[720px] grid-cols-[repeat(auto-fit,minmax(180px,1fr))] gap-x-6 gap-y-4 p-5">
                   {dept.children.map((cat) => (
-                    <li key={cat.id}>
+                    <li key={cat.id} className="min-w-[180px]">
                       <NavigationMenuLink asChild>
                         <Link
                           href={cat.href ?? "/products"}
-                          className="block rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                          className="block rounded-md px-2 py-1 text-sm font-semibold hover:text-primary"
                         >
                           {cat.label}
                         </Link>
                       </NavigationMenuLink>
+                      {cat.children.length > 0 && (
+                        <ul className="mt-1 space-y-0.5 border-l border-border pl-3">
+                          {cat.children.map((sub) => (
+                            <li key={sub.id}>
+                              <NavigationMenuLink asChild>
+                                <Link
+                                  href={sub.href ?? cat.href ?? "/products"}
+                                  className="block rounded-md px-2 py-1 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                                >
+                                  {sub.label}
+                                </Link>
+                              </NavigationMenuLink>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>
@@ -284,15 +302,31 @@ function MobileNav({ nav }: { nav: StorefrontNavDepartment[] }) {
                 {dept.label}
               </p>
               {dept.children.map((cat) => (
-                <SheetClose asChild key={cat.id}>
-                  <Link
-                    href={cat.href ?? "/products"}
-                    className="flex items-center justify-between rounded-md px-3 py-2 text-sm hover:bg-muted"
-                  >
-                    {cat.label}
-                    <ChevronRight className="size-4 text-muted-foreground" />
-                  </Link>
-                </SheetClose>
+                <div key={cat.id}>
+                  <SheetClose asChild>
+                    <Link
+                      href={cat.href ?? "/products"}
+                      className="flex items-center justify-between rounded-md px-3 py-2 text-sm font-medium hover:bg-muted"
+                    >
+                      {cat.label}
+                      <ChevronRight className="size-4 text-muted-foreground" />
+                    </Link>
+                  </SheetClose>
+                  {cat.children.length > 0 && (
+                    <div className="ml-3 border-l border-border pl-2">
+                      {cat.children.map((sub) => (
+                        <SheetClose asChild key={sub.id}>
+                          <Link
+                            href={sub.href ?? cat.href ?? "/products"}
+                            className="block rounded-md px-3 py-1.5 text-sm text-muted-foreground hover:bg-muted hover:text-foreground"
+                          >
+                            {sub.label}
+                          </Link>
+                        </SheetClose>
+                      ))}
+                    </div>
+                  )}
+                </div>
               ))}
             </div>
           ))}
